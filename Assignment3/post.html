@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Post</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>View Blog Post</h1>
+        <a href="index.html">Back to Home</a>
+    </header>
+    <main>
+        <div id="post-container">
+            <!-- Post content will go here -->
+        </div>
+        <button id="edit-btn">Edit</button>
+        <button id="save-btn" style="display:none;">Save</button>
+    </main>
+
+    <script>
+        const postId = new URLSearchParams(window.location.search).get("id");
+        const postContainer = document.getElementById("post-container");
+        const editBtn = document.getElementById("edit-btn");
+        const saveBtn = document.getElementById("save-btn");
+
+        let posts = JSON.parse(localStorage.getItem("blogPosts")) || [];
+        let post = posts.find(p => p.id === postId);
+
+        if (!post) {
+            postContainer.innerHTML = "<p>Post not found.</p>";
+            editBtn.style.display = "none";
+        } else {
+            renderPost(post);
+        }
+
+        function renderPost(post, editable = false) {
+            postContainer.innerHTML = \`
+                <label>Title:</label><br>
+                \${editable 
+                    ? \`<input type="text" id="edit-title" value="\${post.title}"><br><br>\` 
+                    : \`<h2>\${post.title}</h2>\`}
+
+                <label>Content:</label><br>
+                \${editable 
+                    ? \`<textarea id="edit-content" rows="10">\${post.content}</textarea><br><br>\` 
+                    : \`<p>\${post.content.replace(/\n/g, "<br>")}</p>\`}
+
+                \${post.image ? \`<img src="\${post.image}" alt="Post Image" style="max-width: 100%;"><br><br>\` : ""}
+                <small>Posted on: \${new Date(post.date).toLocaleString()}</small>
+            \`;
+        }
+
+        editBtn.addEventListener("click", function() {
+            renderPost(post, true);
+            editBtn.style.display = "none";
+            saveBtn.style.display = "inline";
+        });
+
+        saveBtn.addEventListener("click", function() {
+            const newTitle = document.getElementById("edit-title").value.trim();
+            const newContent = document.getElementById("edit-content").value.trim();
+
+            if (!newTitle || !newContent) {
+                alert("Title and content cannot be empty.");
+                return;
+            }
+
+            post.title = newTitle;
+            post.content = newContent;
+
+            const index = posts.findIndex(p => p.id === post.id);
+            if (index !== -1) {
+                posts[index] = post;
+                localStorage.setItem("blogPosts", JSON.stringify(posts));
+            }
+
+            renderPost(post);
+            editBtn.style.display = "inline";
+            saveBtn.style.display = "none";
+        });
+    </script>
+</body>
+</html>
